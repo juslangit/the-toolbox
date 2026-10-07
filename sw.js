@@ -5,6 +5,13 @@
 const CACHE = 'toolbox-dev';
 const FILES = ['./', 'index.html']; /* @files */
 
+// Big downloads a few tools ask for (video engine, AI models) come from these
+// hosts. They never change at a given URL, so they are served from the cache
+// first and kept across versions — downloaded once, then offline for good.
+const CDN = 'toolbox-cdn';
+const CDN_HOSTS = /(^|\.)(jsdelivr\.net|huggingface\.co|hf\.co|unpkg\.com)$/;
+const KEEP = [CACHE, CDN, 'transformers-cache'];
+
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
 });
@@ -12,12 +19,24 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k.startsWith('toolbox-') && !KEEP.includes(k)).map(k => caches.delete(k))))
       .then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
+  if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  if (url.origin !== location.origin) {
+    if (!CDN_HOSTS.test(url.hostname)) return;
+    e.respondWith(caches.open(CDN).then(async c => {
+      const hit = await c.match(e.request);
+      if (hit) return hit;
+      const res = await fetch(e.request);
+      if (res.ok) c.put(e.request, res.clone());
+      return res;
+    }));
+    return;
+  }
   e.respondWith(
     fetch(e.request)
       .then(res => {

@@ -1,0 +1,104 @@
+/* Styles for the images drawer (js/tools/images.js). Uses the tokens in style.css. */
+
+/* Checkerboard behind pictures so see-through areas show. */
+.img-checker {
+  --chk: color-mix(in srgb, var(--ink) 9%, transparent);
+  background-color: var(--bg-2);
+  background-image: conic-gradient(var(--chk) 25%, transparent 0 50%, var(--chk) 0 75%, transparent 0);
+  background-size: 18px 18px;
+  border-radius: 10px;
+}
+.preview.img-checker { padding: 8px; }
+.img-atlas-preview img { max-height: 420px; }
+
+.img-range { width: 100%; accent-color: var(--accent); min-height: 32px; }
+.img-range-val { font-family: var(--mono); font-size: .9rem; color: var(--ink-2); }
+
+.img-facts dd, .img-camera dd { word-break: break-word; }
+
+/* result file list */
+.img-files { display: grid; gap: 10px; }
+.img-file {
+  display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center;
+  padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-2); min-width: 0;
+}
+.img-thumb { width: 64px; height: 64px; display: grid; place-items: center; overflow: hidden; }
+.img-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.img-file-ext { font-family: var(--mono); font-size: .8rem; color: var(--ink-3); }
+.img-file-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.img-file-text strong { font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.img-file-text span { font-size: .85rem; color: var(--ink-2); }
+.img-file-text .img-file-note { color: var(--ink-3); }
+.img-files-foot { align-items: center; }
+
+/* before/after slider */
+.img-compare { position: relative; overflow: hidden; touch-action: pan-y; line-height: 0; }
+.img-compare > img, .img-compare-after img { display: block; width: 100%; height: auto; max-height: none; }
+.img-compare-after { position: absolute; inset: 0; clip-path: inset(0 0 0 var(--split, 50%)); }
+.img-compare-line { position: absolute; top: 0; bottom: 0; left: var(--split, 50%); width: 2px; margin-left: -1px; background: var(--accent); pointer-events: none; }
+.img-compare .img-range { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
+.img-compare::before, .img-compare::after {
+  position: absolute; top: 8px; z-index: 1; font-size: .78rem; font-weight: 600; line-height: 1; padding: 5px 9px; border-radius: 99px;
+  background: rgba(0, 0, 0, .6); color: #fff; pointer-events: none;
+}
+.img-compare::before { content: 'Before'; left: 8px; }
+.img-compare::after { content: 'After'; right: 8px; }
+.img-fig { margin: 0; display: grid; gap: 6px; min-width: 0; }
+.img-fig figcaption { font-size: .85rem; color: var(--ink-3); text-align: center; }
+
+/* atlas colours + histogram */
+.img-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.img-swatch {
+  font: inherit; color: var(--ink); display: grid; gap: 2px; padding: 6px; text-align: left;
+  border: 2px solid var(--line); border-radius: 12px; background: var(--bg-2); cursor: pointer;
+}
+.img-swatch i { display: block; height: 44px; border-radius: 8px; background: var(--c); border: 1px solid rgba(0, 0, 0, .15); }
+.img-swatch span { font-family: var(--mono); font-size: .85rem; }
+.img-swatch small { color: var(--ink-3); font-size: .78rem; }
+.img-swatch.on { border-color: var(--accent); }
+.img-hist { width: 100%; height: auto; aspect-ratio: 512 / 160; background: var(--bg-2); border-radius: 10px; border: 1px solid var(--line); }
+
+/* social cropper */
+.img-presets .chip.on, .chips .chip.on { border-color: var(--accent); color: var(--ink); background: var(--panel-2); }
+.img-presets .chip small { color: var(--ink-3); }
+.img-crop-stage { position: relative; width: 100%; max-width: 640px; max-height: 70vh; margin: 0 auto; overflow: hidden; touch-action: none; }
+.img-crop-canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+.img-crop-canvas:active { cursor: grabbing; }
+
+/* favicon */
+.img-fav-tab { display: flex; }
+.img-fav-tabbar {
+  display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 8px 14px; border-radius: 10px 10px 0 0;
+  background: var(--bg-2); border: 1px solid var(--line); border-bottom: 0; font-size: .9rem;
+}
+.img-fav-tabbar img { flex: none; }
+.img-fav-tabbar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.img-fav-grid { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.img-fav { margin: 0; display: grid; gap: 6px; justify-items: center; }
+.img-fav > div { padding: 6px; display: grid; place-items: center; }
+.img-fav img { display: block; image-rendering: auto; }
+.img-fav figcaption { font-size: .78rem; color: var(--ink-3); text-align: center; word-break: break-all; max-width: 150px; }
+
+/* splitter, stitcher */
+.img-split-canvas { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 8px; }
+.img-stitch-canvas { display: block; max-width: 100%; height: auto; max-height: 480px; margin: 0 auto; object-fit: contain; }
+.img-stitch-list { display: grid; gap: 8px; }
+.img-stitch-list:empty { display: none; }
+.img-stitch-item { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: center; min-width: 0; }
+.img-stitch-item > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .92rem; }
+
+/* svg, paste */
+.img-svg-pv img { max-height: 240px; }
+.img-paste-btn { min-height: 56px; font-size: 1.1rem; padding: 0 28px; }
+.img-paste-catch {
+  min-height: 90px; display: grid; place-items: center; border: 2px dashed var(--line); border-radius: var(--radius);
+  color: var(--ink-3); outline: none;
+}
+.img-paste-catch:focus { border-color: var(--accent); }
+
+@media (max-width: 520px) {
+  .img-file { grid-template-columns: 52px 1fr auto; }
+  .img-thumb { width: 52px; height: 52px; }
+  .img-stitch-item { grid-template-columns: 52px 1fr; }
+  .img-stitch-item > .row { grid-column: 1 / -1; justify-content: flex-end; }
+}

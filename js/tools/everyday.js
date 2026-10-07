@@ -1,5 +1,6 @@
 import { h, field, input, textarea, select, checkbox, output, note, row, card, grid, tabs, on, copyBtn, download, copy } from '../ui.js';
 import qrcode from '../../vendor/qrcode.js';
+import { sendBtn, asFile, textOf } from '../hub.js';
 
 qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
 
@@ -22,7 +23,9 @@ const qr = {
   id: 'qr', name: 'QR code', group: 'everyday', icon: 'qr-code',
   desc: 'QR codes for links, text or WiFi logins — download as PNG or SVG.',
   keywords: 'qr code wifi barcode link share homestay password scan',
-  render(root) {
+  accepts: ['text'],
+  render(root, incoming) {
+    if (incoming?.text) queueMicrotask(() => { text.value = incoming.text.slice(0, 2000); draw(); });
     const mode = tabs([['text', 'Link or text'], ['wifi', 'WiFi']], 'text', v => { textPane.hidden = v !== 'text'; wifiPane.hidden = v !== 'wifi'; draw(); });
     const text = textarea({ rows: 3, value: 'https://juslangit.github.io', mono: false });
     const ssid = input({ placeholder: 'Network name' });
@@ -67,7 +70,8 @@ const qr = {
         h('section', { class: 'card center' }, canvas, row(
           h('button', { class: 'btn primary', type: 'button', onclick: () => svg && download('qr.png', canvas.toDataURL('image/png')) }, 'PNG'),
           h('button', { class: 'btn', type: 'button', onclick: () => svg && download('qr.svg', new Blob([svg], { type: 'image/svg+xml' })) }, 'SVG'),
-          h('button', { class: 'btn', type: 'button', onclick: () => svg && copy(svg) }, 'Copy SVG')))));
+          h('button', { class: 'btn', type: 'button', onclick: () => svg && copy(svg) }, 'Copy SVG'),
+          sendBtn(async () => svg ? { files: [await asFile(canvas, 'qr.png')] } : null)))));
     on([text, ssid, pass, fg, bg, hidden.input], draw);
     on([sec, ecl], draw, 'change');
   },
@@ -112,7 +116,9 @@ const stats = {
   id: 'stats', name: 'Text statistics', group: 'everyday', icon: 'letter-text',
   desc: 'Count words, characters, lines and bytes, with reading time.',
   keywords: 'word count character count length bytes reading time text',
-  render(root) {
+  accepts: ['text', 'text/plain', '.txt', '.md'],
+  render(root, incoming) {
+    textOf(incoming).then(t => { if (t != null) { text.value = t; text.dispatchEvent(new Event('input')); } });
     const text = textarea({ rows: 10, mono: false, placeholder: 'Paste or type text…' });
     const grid4 = h('div', { class: 'stat-grid' });
     const top = h('div', { class: 'chips' });

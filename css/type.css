@@ -1,0 +1,111 @@
+/* Styles for the type drawer (js/tools/type.js). Uses the tokens in style.css. */
+.ty-stack { gap: 16px; min-width: 0; }
+
+/* Large Type */
+.ty-lt-card { padding: 10px; }
+.ty-lt-stage {
+  height: min(62vh, 560px); border-radius: 12px; overflow: hidden; cursor: zoom-in;
+  display: flex; align-items: center; justify-content: center;
+}
+.ty-lt-stage, .ty-lt-full { background: #111; color: #fafafa; }
+.ty-lt-stage[data-look="light"], .ty-lt-full[data-look="light"] { background: #fff; color: #111; }
+.ty-lt-stage[data-look="contrast"], .ty-lt-full[data-look="contrast"] { background: #000; color: #ffe600; }
+.ty-lt-inner {
+  width: 100%; padding: 0 3%; text-align: center; line-height: 1.12; font-weight: 700;
+  white-space: pre-wrap; overflow-wrap: normal; word-break: normal; letter-spacing: -.01em;
+}
+.ty-lt-inner.boxes { display: flex; flex-wrap: wrap; justify-content: center; gap: .12em; white-space: normal; }
+.ty-lt-ch { display: inline-flex; flex-direction: column; align-items: center; min-width: .85em; padding: .04em .1em 0; border-radius: .12em; background: rgba(127, 127, 127, .16); font-family: var(--mono); }
+.ty-lt-ch b { font-weight: 600; line-height: 1.1; }
+.ty-lt-ch small { font: 600 .26em/1.4 var(--font); opacity: .6; }
+.ty-lt-ch.digit b { color: #4aa3ff; }
+.ty-lt-ch.sym b { color: #ef6a5a; }
+.ty-lt-ch.upper b { text-decoration: underline; text-decoration-thickness: .04em; text-underline-offset: .1em; }
+[data-look="contrast"] .ty-lt-ch.digit b { color: #7fe0ff; }
+[data-look="contrast"] .ty-lt-ch.sym b { color: #ff9b8a; }
+.ty-lt-full {
+  position: fixed; inset: 0; z-index: 200; cursor: zoom-out;
+  display: flex; align-items: center; justify-content: center;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Glyph browser */
+.ty-glyph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; max-height: 62vh; overflow-y: auto; padding: 2px; }
+.ty-glyph-grid:empty { display: none; }
+.ty-glyph {
+  font: 1.5rem/1 var(--font); min-height: 54px; border-radius: 9px; cursor: pointer;
+  background: var(--bg-2); color: var(--ink); border: 1px solid var(--line); padding: 0;
+  overflow: hidden; text-overflow: clip;
+}
+.ty-glyph:hover { border-color: var(--g-type); }
+.ty-glyph.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+.ty-glyph-head { display: flex; gap: 18px; align-items: center; }
+.ty-glyph-big {
+  flex: none; width: 112px; height: 112px; display: grid; place-items: center; font-size: 4rem; line-height: 1;
+  border-radius: 14px; background: var(--bg-2); border: 1px solid var(--line);
+}
+.ty-glyph-name { font-size: 1.1rem; word-break: break-word; }
+.ty-glyph-outs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 10px 16px; }
+
+/* Paper sizes */
+.ty-paper-table tr { cursor: pointer; }
+.ty-paper-table tbody tr:hover { background: var(--bg-2); }
+.ty-paper-table tr.on { background: color-mix(in srgb, var(--g-type) 18%, transparent); }
+.ty-paper-table tbody th { font-weight: 600; color: var(--ink); font-size: .92rem; }
+.ty-paper-svg svg { width: 100%; height: auto; max-height: 360px; display: block; }
+.ty-paper-svg rect { fill: none; stroke-width: 1.5; }
+.ty-paper-svg rect.faint { stroke: var(--line); }
+.ty-paper-svg rect.main { fill: color-mix(in srgb, var(--g-type) 22%, transparent); stroke: var(--g-type); stroke-width: 2.5; }
+.ty-paper-svg rect.cmp { stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 6 4; }
+.ty-key { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: middle; border: 2px solid var(--line); }
+.ty-key.main { border-color: var(--g-type); background: color-mix(in srgb, var(--g-type) 22%, transparent); }
+.ty-key.cmp { border: 2px dashed var(--accent); }
+
+/* Line height */
+.ty-lh-preview { margin: 0; color: var(--ink); background-position: 0 0; overflow-wrap: break-word; }
+.ty-lh-preview.grid { background-image: linear-gradient(to bottom, transparent calc(100% - 1px), color-mix(in srgb, var(--g-type) 45%, transparent) calc(100% - 1px)); }
+
+/* Unit converters */
+.ty-units { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr)); gap: 12px 14px; }
+
+/* Font explorer */
+.ty-font-hero { font-size: clamp(1.8rem, 6vw, 3.2rem); line-height: 1.15; overflow-wrap: anywhere; }
+.ty-font-meta dd { font-family: var(--font); font-size: .95rem; word-break: break-word; }
+.ty-font-tester { line-height: 1.25; overflow-wrap: anywhere; padding: 12px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line); min-height: 2em; }
+.ty-font-feats { gap: 4px 18px; }
+.ty-font-feats .check span { font-family: var(--mono); font-size: .85rem; }
+.ty-font-glyphs { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.ty-font-glyph { margin: 0; padding: 6px; border-radius: 9px; background: var(--bg-2); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ty-font-glyph svg { width: 100%; height: 64px; fill: var(--ink); }
+.ty-font-glyph svg .base { stroke: var(--g-type); stroke-width: 1%; opacity: .5; vector-effect: non-scaling-stroke; }
+.ty-font-glyph figcaption { display: flex; flex-direction: column; font-size: .72rem; line-height: 1.25; color: var(--ink-3); min-width: 0; }
+.ty-font-glyph figcaption span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+.ty-font-glyph figcaption small { font-family: var(--mono); }
+.ty-licence > summary { cursor: pointer; color: var(--ink-2); font-weight: 600; }
+.ty-licence pre.mono-block { margin-top: 8px; max-height: 300px; overflow: auto; font-size: .8rem; }
+
+/* Scratchpad */
+.ty-scratch { min-height: 42vh; font-size: 1.05rem; line-height: 1.6; }
+.ty-counts { margin: 0; color: var(--ink-3); font-size: .9rem; font-variant-numeric: tabular-nums; }
+.ty-focus {
+  position: fixed; inset: 0; z-index: 200; background: var(--bg); display: flex; flex-direction: column;
+  padding: calc(10px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+.ty-focus-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 760px; width: 100%; margin: 0 auto 10px; }
+.ty-focus .ty-scratch {
+  flex: 1; width: 100%; max-width: 760px; margin: 0 auto; resize: none; border: 0; box-shadow: none;
+  background: transparent; font-size: 1.2rem; line-height: 1.75; padding: 8px 0;
+}
+body.ty-focus-on { overflow: hidden; }
+
+/* Document converter */
+.ty-doc-frame { width: 100%; min-height: 320px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.ty-docx-out:empty { display: none; }
+.ty-docx-out { display: flex; flex-direction: column; gap: 10px; }
+
+@media (max-width: 520px) {
+  .ty-glyph-grid { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); }
+  .ty-glyph { min-height: 46px; font-size: 1.3rem; }
+  .ty-glyph-big { width: 84px; height: 84px; font-size: 3rem; }
+  .ty-lt-stage { height: 52vh; }
+}

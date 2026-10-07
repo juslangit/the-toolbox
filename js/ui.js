@@ -185,3 +185,67 @@ export function download(name, blobOrUrl) {
   a.remove();
   if (typeof blobOrUrl !== 'string') setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+// File picker that also takes drag-and-drop. onfiles gets an array of File.
+// accept is the <input accept> string, e.g. 'image/*' or '.pdf'.
+export function dropzone({ accept = '', multiple = false, label, onfiles }) {
+  const inp = h('input', { type: 'file', hidden: true, accept, multiple });
+  const text = label || (multiple ? 'Drop files here, or tap to choose' : 'Drop a file here, or tap to choose one');
+  const el = h('label', { class: 'drop' }, inp, h('span', {}, text));
+  const give = list => { const files = [...(list || [])]; if (files.length) onfiles(multiple ? files : files.slice(0, 1)); };
+  inp.addEventListener('change', () => { give(inp.files); inp.value = ''; });
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('over'));
+  el.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); el.classList.remove('over'); give(e.dataTransfer.files); });
+  el.input = inp;
+  return el;
+}
+
+// A button that saves a file. getBlob may be async and may return null.
+export function downloadBtn(name, getBlob, label = 'Download') {
+  return h('button', {
+    class: 'btn small primary', type: 'button',
+    onclick: async () => {
+      const b = await getBlob();
+      if (b) download(typeof name === 'function' ? name() : name, b);
+    },
+  }, label);
+}
+
+export function fmtBytes(n) {
+  if (n < 1024) return n + ' B';
+  const u = ['KB', 'MB', 'GB'];
+  let i = -1;
+  do { n /= 1024; i++; } while (n >= 1024 && i < u.length - 1);
+  return `${n < 10 ? n.toFixed(1) : Math.round(n)} ${u[i]}`;
+}
+
+// Loads an image File/Blob into an ImageBitmap-like object that canvas can draw.
+export async function loadImage(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+    await img.decode();
+    return img;
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+}
+
+// File name with a new extension: rename('photo.jpeg', 'webp') → 'photo.webp'
+export const rename = (name, ext, suffix = '') => name.replace(/\.[^.]+$/, '') + suffix + '.' + ext;
+
+// Progress bar: p.set(0..1) and p.label('…'); p.el goes in the page.
+export function progress() {
+  const bar = h('i');
+  const txt = h('span', { class: 'progress-label' });
+  const el = h('div', { class: 'progress', hidden: true }, h('div', { class: 'meter' }, bar), txt);
+  return {
+    el,
+    set(v) { el.hidden = false; bar.style.width = Math.round(Math.max(0, Math.min(1, v)) * 100) + '%'; },
+    label(s) { el.hidden = false; txt.textContent = s || ''; },
+    hide() { el.hidden = true; },
+  };
+}

@@ -1,5 +1,6 @@
 import { h, field, textarea, checkbox, output, card, grid, tabs, on } from '../ui.js';
 import { marked } from '../../vendor/marked.js';
+import { textOf } from '../hub.js';
 
 const BASIC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
@@ -62,7 +63,9 @@ const markdown = {
   id: 'markdown', name: 'Markdown preview', group: 'convert', icon: 'file-text',
   desc: 'Write Markdown, see it rendered, and copy the HTML.',
   keywords: 'markdown md html preview render readme convert',
-  render(root) {
+  accepts: ['.md', 'text/markdown', 'text'],
+  render(root, incoming) {
+    textOf(incoming).then(t => { if (t != null) { src.value = t; src.dispatchEvent(new Event('input')); } });
     const src = textarea({ rows: 18, value: SAMPLE });
     const view = tabs([['preview', 'Preview'], ['html', 'HTML']], 'preview', v => { frame.hidden = v !== 'preview'; html.el.hidden = v !== 'html'; });
     // sandbox="" — the preview can never run scripts from pasted Markdown.

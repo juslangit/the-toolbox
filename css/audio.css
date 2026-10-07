@@ -1,0 +1,67 @@
+/* Styles for the audio drawer (js/tools/audio.js). Uses the tokens in style.css. */
+.au-stack { display: flex; flex-direction: column; gap: 16px; }
+.au-player { width: 100%; min-height: 44px; }
+.au-head { display: flex; gap: 16px; align-items: center; min-width: 0; }
+.au-head-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.au-cover { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); flex: none; }
+.au-wave-canvas { display: block; width: 100%; height: 140px; border-radius: 10px; background: var(--bg-2); }
+.au-spec { display: block; width: 100%; height: 200px; border-radius: 10px; background: #0c0814; image-rendering: auto; }
+.au-axis { display: flex; justify-content: space-between; gap: 8px; font-size: .8rem; color: var(--ink-3); }
+.au-axis span:nth-child(2) { text-align: center; }
+
+/* trimmer */
+.au-wave { position: relative; touch-action: none; user-select: none; -webkit-user-select: none; }
+.au-wave .au-wave-canvas { height: 160px; cursor: pointer; }
+.au-shade { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--bg) 62%, transparent); pointer-events: none; border-radius: 10px; }
+.au-playhead { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ink); pointer-events: none; }
+.au-handle {
+  position: absolute; top: -6px; bottom: -6px; width: 44px; margin-left: -22px; cursor: ew-resize;
+  display: flex; justify-content: center; touch-action: none; outline: none;
+}
+.au-handle span { width: 4px; height: 100%; border-radius: 3px; background: var(--g-media); position: relative; }
+.au-handle span::after {
+  content: ''; position: absolute; top: 50%; left: 50%; width: 18px; height: 34px; transform: translate(-50%, -50%);
+  border-radius: 8px; background: var(--g-media); box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+}
+.au-handle:focus-visible span::after { outline: 3px solid var(--accent); outline-offset: 2px; }
+.au-sel { font-variant-numeric: tabular-nums; }
+
+/* normaliser */
+.au-ba td { font-variant-numeric: tabular-nums; white-space: nowrap; word-break: normal; }
+.au-ba th, .au-ba td { padding-left: 6px; padding-right: 6px; }
+.au-players { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+.au-players > div { display: flex; flex-direction: column; gap: 6px; }
+
+/* recorder */
+.au-recbox { display: flex; align-items: center; gap: 20px; }
+.au-recinfo { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.au-timer { font-family: var(--mono); font-size: 2.2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.au-level i { background: var(--good); transition: width .05s; }
+.au-level.hot i { background: var(--bad); }
+.au-rec {
+  width: 84px; height: 84px; border-radius: 50%; flex: none; cursor: pointer;
+  border: 4px solid var(--line); background: var(--panel-2); display: grid; place-items: center;
+}
+.au-rec span { width: 40px; height: 40px; border-radius: 50%; background: var(--bad); transition: border-radius .15s, transform .15s; }
+.au-rec.on span { border-radius: 8px; transform: scale(.8); }
+.au-rec.on { border-color: var(--bad); animation: au-pulse 1.4s ease-in-out infinite; }
+.au-rec.paused { animation: none; }
+.au-rec:disabled { opacity: .4; cursor: not-allowed; }
+@keyframes au-pulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--bad) 25%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .au-rec.on { animation: none; } }
+.au-takes { display: flex; flex-direction: column; gap: 16px; }
+.au-takes:empty { display: none; }
+.au-take-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+
+/* waveform generator */
+.au-colour { padding: 4px; height: 46px; cursor: pointer; }
+.au-wavegen { padding: 12px; border-radius: 10px;
+  background: repeating-conic-gradient(var(--bg-2) 0 25%, var(--panel) 0 50%) 0 0 / 20px 20px; }
+.au-wavegen svg { width: 100%; }
+
+/* subtitles */
+.au-cues td.au-cue-text { font-family: var(--font); white-space: pre-wrap; word-break: normal; }
+.au-cues { display: block; overflow-x: auto; max-height: 420px; overflow-y: auto; }
+.au-tc-frames { font-variant-numeric: tabular-nums; }
+.au-cues td { white-space: nowrap; word-break: normal; font-size: .8rem; }
+.au-cues td.au-cue-text { white-space: pre-wrap; min-width: 140px; font-size: .9rem; }

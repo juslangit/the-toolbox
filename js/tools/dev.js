@@ -1,5 +1,6 @@
 import { h, field, input, textarea, select, checkbox, output, note, row, card, grid, tabs, on, copyBtn } from '../ui.js';
 import cronstrue from '../../vendor/cronstrue.js';
+import { textOf } from '../hub.js';
 import * as Diff from '../../vendor/diff.js';
 
 const url = {
@@ -249,7 +250,9 @@ const json = {
   id: 'json', name: 'JSON formatter', group: 'dev', icon: 'braces',
   desc: 'Pretty-print, minify, sort and validate JSON — shows where it breaks.',
   keywords: 'json format pretty print minify validate lint beautify',
-  render(root) {
+  accepts: ['.json', 'application/json', 'text'],
+  render(root, incoming) {
+    textOf(incoming).then(t => { if (t != null) { src.value = t; src.dispatchEvent(new Event('input')); } });
     const src = textarea({ rows: 12, value: '{"guest":"Aminah","nights":2,"paid":true,"extras":["breakfast","late checkout"],"total":{"amount":460,"currency":"MYR"}}' });
     const indent = tabs([['2', '2 spaces'], ['4', '4 spaces'], ['\t', 'Tab'], ['0', 'Minify']], '2', () => run());
     const sort = checkbox('Sort keys A–Z');

@@ -1,5 +1,6 @@
 import { h, pasteBtn, field, input, textarea, select, checkbox, output, note, row, card, grid, tabs, on, copyBtn, download } from '../ui.js';
 import yaml from '../../vendor/js-yaml.js';
+import { sendBtn } from '../hub.js';
 import * as toml from '../../vendor/smol-toml.js';
 import Papa from '../../vendor/papaparse.js';
 
@@ -22,7 +23,8 @@ const base64 = {
   id: 'base64', name: 'Base64', group: 'convert', icon: 'binary',
   desc: 'Encode and decode Base64 text, or turn a file into a data URL and back.',
   keywords: 'encode decode b64 data url file image',
-  render(root) {
+  accepts: ['file', 'text'],
+  render(root, incoming) {
     const mode = tabs([['text', 'Text'], ['file', 'File']], 'text', v => { textPane.hidden = v !== 'text'; filePane.hidden = v !== 'file'; });
 
     const plain = textarea({ placeholder: 'Plain text…', rows: 6 });
@@ -80,6 +82,8 @@ const base64 = {
     filePane.hidden = true;
 
     root.append(mode, textPane, filePane);
+    if (incoming?.files?.[0]) { mode.set('file'); textPane.hidden = true; filePane.hidden = false; readFile(incoming.files[0]); }
+    else if (incoming?.text != null) { plain.value = incoming.text; enc(); }
   },
 };
 
@@ -125,7 +129,15 @@ const formats = {
   id: 'formats', name: 'Data formats', group: 'convert', icon: 'arrow-left-right',
   desc: 'Convert between JSON, YAML, TOML and CSV in any direction.',
   keywords: 'json yaml toml csv convert config data xml spreadsheet',
-  render(root) {
+  accepts: ['.json', '.yaml', '.yml', '.toml', '.csv', 'application/json', 'text/csv'],
+  render(root, incoming) {
+    const inFile = incoming?.files?.[0];
+    if (inFile) inFile.text().then(t => {
+      const ext = inFile.name.split('.').pop().toLowerCase();
+      from.value = { json: 'JSON', yaml: 'YAML', yml: 'YAML', toml: 'TOML', csv: 'CSV' }[ext] || 'JSON';
+      if (to.value === from.value) to.value = from.value === 'JSON' ? 'YAML' : 'JSON';
+      src.value = t; src.dispatchEvent(new Event('input'));
+    });
     const from = select(FORMATS, 'JSON'), to = select(FORMATS, 'YAML');
     const indent = select([['2', '2 spaces'], ['4', '4 spaces']], '2');
     const src = textarea({ rows: 14, value: SAMPLE });
@@ -255,7 +267,9 @@ const color = {
   id: 'color', name: 'Colour converter', group: 'convert', icon: 'palette',
   desc: 'HEX, RGB, HSL and OKLCH, with contrast against white and black.',
   keywords: 'color colour hex rgb hsl oklch picker contrast css',
-  render(root) {
+  accepts: ['colour'],
+  render(root, incoming) {
+    if (incoming?.colour) queueMicrotask(() => { src.value = incoming.colour; run(); });
     const src = input({ value: '#e8a33d', mono: true, placeholder: '#e8a33d, rgb(…), hsl(…), teal' });
     const picker = h('input', { type: 'color', class: 'swatch-input', value: '#e8a33d', 'aria-label': 'Pick a colour' });
     const err = note();
@@ -288,7 +302,7 @@ const color = {
     picker.addEventListener('input', () => { src.value = picker.value; run(); });
     root.append(
       card(row(field('Any CSS colour', src), picker), err.el, swatch, h('div', { class: 'grid2' }, cw, cb)),
-      card(...names.map(n => outs[n].el)));
+      card(...names.map(n => outs[n].el), row(sendBtn(() => outs.HEX.get() ? { colour: outs.HEX.get().slice(0, 7) } : null))));
     on(src, run);
   },
 };
