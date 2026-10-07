@@ -4,7 +4,7 @@
 // --only runs just those tools (and skips the shell and phone checks).
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, mkdtempSync, readdirSync } from 'node:fs';
-import { set, val } from './helpers.mjs';
+import { set, val, giveFile, pngFile } from './helpers.mjs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -141,10 +141,12 @@ try {
 
   // Hand-offs: QR code → Send to… → QR scanner reads it back.
   const hand = [];
+  errors.length = 0;
   await evaluate(`location.hash = '#/tool/qr'`); await sleep(300);
   await evaluate(set('textarea', 'https://thetoolbox.pages.dev/#handoff'));
-  await evaluate(`[...document.querySelectorAll('.btn')].find(b => b.textContent.includes('Send to')).click()`); await sleep(400);
-  if (!await evaluate(`!!document.querySelector('.sheet [data-group] strong')`)) hand.push('Send to sheet did not open');
+  await evaluate(`[...document.querySelectorAll('.btn')].find(b => b.textContent.includes('Send to')).click()`);
+  await evaluate(`(async () => { const t = Date.now(); while (!document.querySelector('.sheet') && Date.now() - t < 5000) await new Promise(r => setTimeout(r, 100)); })()`);
+  if (!await evaluate(`!!document.querySelector('.sheet [data-group] strong')`)) hand.push('Send to sheet did not open: ' + await evaluate(`location.hash + ' sendbtns=' + [...document.querySelectorAll('.btn')].filter(b => b.textContent.includes('Send to')).length + ' wraps=' + document.querySelectorAll('.sheet-wrap').length + ' sheet=' + (document.querySelector('.sheet')?.textContent.slice(0, 120) || '')`));
   await evaluate(`[...document.querySelectorAll('.sheet-item')].find(b => b.textContent.includes('QR scanner'))?.click()`); await sleep(1800);
   const read = await evaluate(`document.querySelector('.scan-result')?.textContent || ''`);
   if (!read.includes('thetoolbox.pages.dev/#handoff')) hand.push('QR scanner did not read the sent QR: ' + read.slice(0, 60));
@@ -162,7 +164,16 @@ try {
   await shot('workflows');
   await evaluate(`location.hash = '#/workflows/photo-web'`); await sleep(400);
   if (await evaluate(`document.querySelectorAll('.wf-step').length`) !== 3) hand.push('photo-web does not show 3 steps');
+  await evaluate(giveFile('.drop input[type=file]', pngFile(3000, 2000, '#e8a33d', 'holiday.png')));
+  await evaluate(`[...document.querySelectorAll('.btn')].find(b => b.textContent.includes('Run')).click()`);
+  await evaluate(`(async () => { const t = Date.now(); while (!document.querySelector('.wf-results li') && Date.now() - t < 15000) await new Promise(r => setTimeout(r, 200)); })()`);
+  const wfOut = await evaluate(`document.querySelector('.wf-results')?.textContent || document.querySelector('.progress-label')?.textContent || ''`);
+  if (!wfOut.includes('holiday.webp') && !wfOut.includes('holiday.jpg')) hand.push('photo-web run: ' + wfOut.slice(0, 120));
+  await evaluate(`location.hash = '#/workflows'`); await sleep(300);
+  if (await evaluate(`[...document.querySelectorAll('main h2, main p, main span')].some(e => e.textContent.trim() === '0')`)) hand.push('stray 0 on the workflows page');
+  await evaluate(`location.hash = '#/workflows/photo-web'`); await sleep(400);
   await shot('workflow-photo-web');
+  if (errors.length) hand.push(...errors.map(e => 'console: ' + e.split('\n')[0]));
   console.log(hand.length ? `✗ hand-offs  ${hand.join(' | ')}` : '✓ hand-offs (Send to, paste a file, workflows)');
   if (hand.length) failed++;
 

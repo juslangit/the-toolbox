@@ -1,1 +1,112 @@
 /* Styles for the calc drawer (js/tools/calc.js). Uses the tokens in style.css. */
+
+/* --- scientific calculator --- */
+.cs-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.cs-mem { font-family: var(--mono); color: var(--ink-2); font-size: .95rem; }
+.cs-screen { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 4px; min-width: 0; }
+.cs-screen .cs-expr { font-size: 1.35rem; background: transparent; border: 0; padding: 6px 2px; width: 100%; min-width: 0; }
+.cs-screen .cs-expr:focus { outline: none; box-shadow: none; }
+.cs-screen:focus-within { border-color: var(--g-calc); }
+.cs-result { font-family: var(--mono); font-size: 1.9rem; text-align: right; color: var(--ink-3); min-height: 2.4rem; overflow-wrap: anywhere; }
+.cs-result.cs-done { color: var(--g-calc); font-weight: 650; }
+.cs-exact { font-family: var(--mono); text-align: right; color: var(--ink-2); min-height: 1.2rem; }
+.cs-mrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.cs-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+.cs-key {
+  font: 600 1.05rem var(--font); color: var(--ink); background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 12px; min-height: 52px; padding: 4px 2px; cursor: pointer; touch-action: manipulation;
+  box-shadow: 0 2px 0 var(--line);
+}
+.cs-key:hover { border-color: var(--g-calc); }
+.cs-key:active { transform: translateY(1px); box-shadow: none; }
+.cs-key.num { font-size: 1.35rem; background: var(--panel); font-family: var(--mono); }
+.cs-key.op { font-size: 1.4rem; color: var(--g-calc); }
+.cs-key.del { color: var(--bad); }
+.cs-key.eq { background: var(--g-calc); color: var(--accent-ink); font-size: 1.5rem; border-color: transparent; }
+.cs-consts .chip { font-size: .85rem; }
+.cs-hist { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 340px; overflow: auto; }
+.cs-hist li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; border-bottom: 1px solid var(--line); padding: 6px 0; }
+.cs-hist button { background: none; border: 0; padding: 4px; cursor: pointer; font-family: var(--mono); font-size: .95rem; color: var(--ink-2); text-align: left; overflow-wrap: anywhere; }
+.cs-hist .cs-h-res { color: var(--g-calc); font-weight: 650; }
+.cs-hist button:hover { text-decoration: underline; }
+.cs-top .btn.on { border-color: var(--g-calc); }
+
+/* --- pretty maths --- */
+.cm-pretty { font-family: 'Cambria Math', 'STIX Two Math', 'Latin Modern Math', Georgia, serif; font-size: 1.6rem; line-height: 2; min-height: 2.4rem; overflow-x: auto; overflow-wrap: anywhere; }
+.cm-pretty i { font-style: italic; }
+.cm-pretty sup { font-size: .65em; vertical-align: .7em; line-height: 0; }
+.cm-frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 .15em; line-height: 1.25; font-size: .9em; }
+.cm-frac > span:first-child { border-bottom: 1.5px solid currentColor; padding: 0 .2em; }
+.cm-frac > span:last-child { padding: 0 .2em; }
+.cm-root { border-top: 1.5px solid currentColor; padding: 0 .1em; margin-left: .05em; }
+.cm-root-line { margin: 2px 0; }
+.cm-approx { color: var(--ink-3); font-size: .7em; font-family: var(--mono); }
+.cm-sub { color: var(--ink-3); font-family: var(--font); font-size: .95rem; margin-top: 8px; }
+.cm-lhs { color: var(--ink-2); }
+.ca-var { max-width: 160px; }
+
+/* --- graph --- */
+.cg-list { display: grid; gap: 8px; }
+.cg-fn { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cg-fn .input { flex: 1; min-width: 0; }
+.cg-fn .input.bad { border-color: var(--bad); }
+.cg-swatch { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.cg-y { font-family: var(--mono); color: var(--ink-3); flex: none; }
+.cg-wrap { width: 100%; min-width: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+.cg-canvas { display: block; width: 100%; touch-action: none; cursor: crosshair; user-select: none; -webkit-user-select: none; }
+.row.tight.cg-tools { align-items: center; flex-wrap: wrap; }
+.cg-spacer { flex: 1; }
+.cg-trace { color: var(--ink-2); font-size: .9rem; min-height: 1.3rem; overflow-wrap: anywhere; }
+.cg-marks td { word-break: normal; }
+
+/* --- unit converter --- */
+.cu-swap { display: flex; align-items: flex-end; padding-bottom: 4px; }
+.cu-all tr { cursor: copy; }
+.cu-all tr.on th, .cu-all tr.on td { color: var(--g-calc); font-weight: 650; }
+.cu-all th { font-weight: 500; color: var(--ink-2); }
+.cu-all td { text-align: right; }
+
+/* --- time zones --- */
+.ct-slider { width: 100%; accent-color: var(--g-calc); }
+.ct-slider-out { font-family: var(--mono); color: var(--g-calc); }
+.ct-zones { display: grid; gap: 8px; }
+.ct-zone { display: grid; grid-template-columns: 1fr auto auto; grid-template-areas: "name time btns" "day day btns"; gap: 2px 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-2); }
+.ct-zone.home { border-color: var(--g-calc); }
+.ct-z-name { grid-area: name; display: flex; flex-wrap: wrap; gap: 0 10px; align-items: baseline; }
+.ct-z-name span { color: var(--ink-3); font-size: .85rem; }
+.ct-z-time { grid-area: time; font-size: 1.7rem; font-weight: 650; }
+.ct-z-day { grid-area: day; color: var(--ink-2); font-size: .9rem; }
+.ct-z-day em { color: var(--accent); font-style: normal; }
+.ct-z-btns { grid-area: btns; display: flex; gap: 4px; }
+.ct-planner { overflow-x: auto; max-width: 100%; padding-bottom: 4px; }
+.ct-grid { display: grid; gap: 2px; min-width: 720px; }
+.ct-g-name { font-size: .82rem; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 6px; align-self: center; position: sticky; left: 0; background: var(--panel); z-index: 1; }
+.ct-cell { font: 600 .78rem var(--mono); border: 0; border-radius: 4px; padding: 6px 0; text-align: center; color: var(--ink-2); cursor: pointer; }
+.ct-cell.work { background: rgba(127, 194, 138, .45); color: var(--ink); }
+.ct-cell.awake { background: rgba(232, 195, 61, .22); }
+.ct-cell.night { background: var(--bg-2); color: var(--ink-3); }
+.ct-cell.both { background: var(--g-calc); color: var(--accent-ink); cursor: default; }
+.ct-cell.none { background: transparent; cursor: default; }
+.ct-cell.cur { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ct-overlap { font-size: 1.05rem; }
+.ct-nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.ct-week { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+
+/* --- stupid units --- */
+.cx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr)); gap: 10px; }
+.cx-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 2px; }
+.cx-card strong { font-family: var(--mono); font-size: 1.5rem; color: var(--g-calc); overflow-wrap: anywhere; }
+.cx-card span { color: var(--ink-2); }
+.cx-card sup { color: var(--ink-3); margin-left: 2px; }
+.cx-notes { margin: 0; padding-left: 1.4em; color: var(--ink-2); display: grid; gap: 4px; font-size: .92rem; }
+
+@media (max-width: 520px) {
+  .cs-pad { gap: 5px; }
+  .cs-key { min-height: 50px; font-size: .95rem; border-radius: 10px; }
+  .cs-key.num { font-size: 1.25rem; }
+  .cs-result { font-size: 1.6rem; }
+  .ct-z-time { font-size: 1.4rem; }
+}
+.cg-tools .btn { white-space: nowrap; flex: none; }
+.cg-who { white-space: nowrap; }
+.cg-who .cg-swatch { display: inline-block; margin-right: 4px; vertical-align: middle; }

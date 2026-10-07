@@ -104,7 +104,7 @@ function renderList(main) {
   const mine = store.get();
   main.replaceChildren(
     head('Workflows', 'Run several tools in a row over a batch of files — drop the files once, get the finished results. Everything happens on this device.'),
-    mine.length && h('section', { class: 'shelf', 'data-group': 'workflow' },
+    mine.length > 0 && h('section', { class: 'shelf', 'data-group': 'workflow' },
       h('header', {}, h('h2', {}, 'Mine'), h('p', {}, 'Saved on this device')),
       h('div', { class: 'board' }, mine.map(w => wfCard(w, steps)))),
     h('section', { class: 'shelf', 'data-group': 'workflow' },
@@ -162,7 +162,7 @@ function renderEditor(main, wf, isMine) {
             h('button', { class: 'btn small ghost', type: 'button', 'aria-label': 'Move up', onclick: () => move(-1) }, '↑'),
             h('button', { class: 'btn small ghost', type: 'button', 'aria-label': 'Move down', onclick: () => move(1) }, '↓'),
             h('button', { class: 'btn small ghost', type: 'button', 'aria-label': 'Remove step', onclick: () => { wf.steps.splice(i, 1); drawSteps(); } }, icon('x', 16)))),
-        s?.options?.length && h('div', { class: 'wf-opts' },
+        s?.options?.length > 0 && h('div', { class: 'wf-opts' },
           s.options.map(o => optionControl(o, ws.opts[o.key] ?? o.value, v => { ws.opts[o.key] = v; }))));
     }));
     if (!wf.steps.length) list.append(h('li', { class: 'field-hint' }, 'No steps yet — add one below.'));

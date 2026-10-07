@@ -1,1 +1,52 @@
 /* Styles for the video drawer (js/tools/video.js). Uses the tokens in style.css. */
+.vid-name { display: flex; flex-wrap: wrap; gap: 4px; color: var(--ink-2); font-size: .95rem; word-break: break-all; }
+.vid-name strong { color: var(--ink); }
+.vid-player { display: block; width: 100%; max-height: 62vh; background: #000; border-radius: 12px; }
+.vid-audio { width: 100%; }
+.vid-out-img { display: block; max-width: 100%; max-height: 60vh; margin: 0 auto; border-radius: 10px; border: 1px solid var(--line);
+  background: repeating-conic-gradient(var(--bg-2) 0 25%, var(--panel-2) 0 50%) 0 0 / 20px 20px; }
+.vid-meta { margin: 0; color: var(--ink-2); word-break: break-all; }
+.vid-meta strong { color: var(--ink); }
+.vid-info { display: flex; flex-direction: column; gap: 16px; }
+.vid-info .stat-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.vid-info .stat strong { font-size: 1.35rem; }
+.vid-big .meter { height: 10px; }
+
+/* Frame strip in Video Atlas */
+.vid-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.vid-frame { margin: 0; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
+.vid-frame canvas { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.vid-frame figcaption { font-family: var(--mono); font-size: .8rem; color: var(--ink-3); text-align: center; }
+.vid-frame:hover canvas { border-color: var(--g-media); }
+
+/* Trim timeline: big handles for fingers */
+.vt { display: flex; flex-direction: column; gap: 6px; user-select: none; -webkit-user-select: none; }
+.vt-track { position: relative; height: 64px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line);
+  touch-action: none; cursor: pointer; margin: 0 14px; }
+.vt-thumbs { position: absolute; inset: 0; display: flex; overflow: hidden; border-radius: 9px; opacity: .55; pointer-events: none; }
+.vt-thumb { flex: 1 1 0; min-width: 0; height: 100%; object-fit: cover; width: 10%; }
+.vt-sel { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--g-media) 22%, transparent);
+  border-top: 3px solid var(--g-media); border-bottom: 3px solid var(--g-media); pointer-events: none; }
+.vt-head { position: absolute; top: -6px; bottom: -6px; width: 2px; margin-left: -1px; background: var(--ink); pointer-events: none; border-radius: 2px; }
+.vt-handle { position: absolute; top: -4px; bottom: -4px; width: 28px; margin-left: -14px; border: 0; padding: 0; border-radius: 8px;
+  background: var(--g-media); cursor: ew-resize; touch-action: none; box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
+.vt-handle::after { content: ''; position: absolute; left: 50%; top: 30%; bottom: 30%; width: 4px; margin-left: -2px; border-radius: 2px;
+  background: color-mix(in srgb, #000 35%, transparent); }
+.vt-handle:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.vt-labels { display: flex; justify-content: space-between; gap: 8px; font-family: var(--mono); font-size: .85rem; color: var(--ink-2); margin: 0 4px; }
+.vid-setters .btn { flex: 1 1 auto; }
+
+.vid-est { font-size: 1.15rem; }
+.vid-est:empty { display: none; }
+
+/* Screen recorder */
+.vid-clock { font-family: var(--mono); font-size: 1.3rem; font-weight: 700; padding: 0 6px; align-self: center; }
+.vid-clock.rec { color: var(--bad); }
+
+/* Subtitle studio: the preview canvas sits exactly over the video */
+.vid-stage { position: relative; }
+.vid-stage .vid-player { max-height: none; }
+.vid-overlay { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; object-fit: contain; }
+.vid-colour { width: 100%; height: 48px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-2); padding: 4px; cursor: pointer; }
+.vid-stage { margin: 0 auto; width: 100%; }
+.drop.vid-drop-small { min-height: 64px; padding: 12px; }
