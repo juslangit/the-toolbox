@@ -12,7 +12,8 @@ const scanner = {
   id: 'qrscan', name: 'QR scanner', group: 'everyday', icon: 'scan-qr-code',
   desc: 'Read a QR code with the camera or from a photo or screenshot.',
   keywords: 'qr scan read decode camera reader photo screenshot wifi',
-  render(root) {
+  accepts: ['image/*'],
+  render(root, incoming) {
     let jsQR = null, stream = null, raf = 0, last = 0;
     const mode = tabs([['camera', 'Camera'], ['image', 'Photo or screenshot']], 'camera', v => {
       camPane.hidden = v !== 'camera'; imgPane.hidden = v !== 'image';
@@ -116,6 +117,7 @@ const scanner = {
     pick.addEventListener('drop', e => { e.preventDefault(); pick.classList.remove('over'); readImage(e.dataTransfer.files[0]); });
 
     root.append(card(mode, camPane, imgPane, err.el), result);
+    if (incoming?.files?.[0]) { mode.set('image'); camPane.hidden = true; imgPane.hidden = false; readImage(incoming.files[0]); }
     // Turn the camera off when leaving the tool.
     return stop;
   },

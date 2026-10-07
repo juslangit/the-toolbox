@@ -107,7 +107,8 @@ const checksum = {
   id: 'checksum', name: 'File checksum', group: 'crypto', icon: 'file-check',
   desc: 'SHA-256, SHA-1, SHA-512 and MD5 of a file — check a download is genuine.',
   keywords: 'checksum file hash sha256 md5 verify download integrity',
-  render(root) {
+  accepts: ['file'],
+  render(root, incoming) {
     const drop = h('label', { class: 'drop' }, h('input', { type: 'file', hidden: true }), h('span', {}, 'Drop a file here, or tap to choose one'));
     const info = note();
     const expect = input({ mono: true, placeholder: 'Paste the checksum from the download page' });
@@ -141,6 +142,7 @@ const checksum = {
     drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); read(e.dataTransfer.files[0]); });
     root.append(card(drop, info.el), card(field('Expected checksum (optional)', expect), verdict), card(...algos.map(a => outs[a].el)));
     on(expect, compare);
+    if (incoming?.files?.[0]) read(incoming.files[0]);
   },
 };
 

@@ -139,6 +139,33 @@ try {
   console.log(shell.length ? `✗ shell  ${shell.join(' | ')}` : '✓ shell (kept inputs, secrets not kept, Paste)');
   if (shell.length) failed++;
 
+  // Hand-offs: QR code → Send to… → QR scanner reads it back.
+  const hand = [];
+  await evaluate(`location.hash = '#/tool/qr'`); await sleep(300);
+  await evaluate(set('textarea', 'https://thetoolbox.pages.dev/#handoff'));
+  await evaluate(`[...document.querySelectorAll('.btn')].find(b => b.textContent.includes('Send to')).click()`); await sleep(400);
+  if (!await evaluate(`!!document.querySelector('.sheet [data-group] strong')`)) hand.push('Send to sheet did not open');
+  await evaluate(`[...document.querySelectorAll('.sheet-item')].find(b => b.textContent.includes('QR scanner'))?.click()`); await sleep(1800);
+  const read = await evaluate(`document.querySelector('.scan-result')?.textContent || ''`);
+  if (!read.includes('thetoolbox.pages.dev/#handoff')) hand.push('QR scanner did not read the sent QR: ' + read.slice(0, 60));
+  // A file pasted on the home page offers the tools that open it.
+  await evaluate(`location.hash = '#/'`); await sleep(300);
+  await evaluate(`(() => { const dt = new DataTransfer(); dt.items.add(new File(['{"a":1}'], 'data.json', { type: 'application/json' })); document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true })); })()`); await sleep(300);
+  const offered = await evaluate(`[...document.querySelectorAll('.sheet-item strong')].map(s => s.textContent)`);
+  if (!offered.includes('JSON formatter')) hand.push('pasted .json did not offer JSON formatter: ' + offered.join(', '));
+  await evaluate(`[...document.querySelectorAll('.sheet-item')].find(b => b.textContent.includes('JSON formatter'))?.click()`); await sleep(400);
+  if (!(await evaluate(`document.querySelector('.output textarea')?.value || ''`)).includes('"a": 1')) hand.push('JSON formatter did not open the pasted file');
+  // Workflows page lists the ready-made ones and opens one.
+  await evaluate(`location.hash = '#/workflows'`); await sleep(400);
+  const wfs = await evaluate(`document.querySelectorAll('.wf-card').length`);
+  if (wfs < 10) hand.push('workflow cards: ' + wfs);
+  await shot('workflows');
+  await evaluate(`location.hash = '#/workflows/photo-web'`); await sleep(400);
+  if (await evaluate(`document.querySelectorAll('.wf-step').length`) !== 3) hand.push('photo-web does not show 3 steps');
+  await shot('workflow-photo-web');
+  console.log(hand.length ? `✗ hand-offs  ${hand.join(' | ')}` : '✓ hand-offs (Send to, paste a file, workflows)');
+  if (hand.length) failed++;
+
   // Phone views and the light theme.
   await viewport(393, 852, true);
   await evaluate(`location.hash = '#/'`); await sleep(400); await shot('home-phone');
