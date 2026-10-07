@@ -1,5 +1,7 @@
 # The Toolbox
 
+**Live: https://thetoolbox.pages.dev**
+
 Small developer tools that run entirely in the browser — nothing you type leaves the device,
 and it works offline once opened. Inspired by [IT Tools](https://it-tools.tech); written from
 scratch (no IT Tools code is used).
@@ -23,6 +25,8 @@ node serve.mjs          # http://127.0.0.1:8471/
 node tests/smoke.mjs    # opens every tool in headless Chrome and checks known answers
 node tests/smoke.mjs --shots   # …and refreshes screenshots/
 ```
+
+Deploy with `./tools/deploy.sh` (Cloudflare Pages, project `thetoolbox`).
 
 On iPhone: open the site in Safari → Share → **Add to Home Screen**. It then opens full
 screen like an app and keeps working without a connection (`sw.js`).
