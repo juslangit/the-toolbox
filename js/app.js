@@ -1,15 +1,19 @@
 import { h } from './ui.js';
 import { icon } from './icons.js';
 import cryptoTools from './tools/crypto.js';
+import security from './tools/security.js';
 import convert from './tools/convert.js';
+import markup from './tools/markup.js';
 import dev from './tools/dev.js';
+import ops from './tools/ops.js';
 import everyday from './tools/everyday.js';
+import scanner from './tools/scanner.js';
 
 export const GROUPS = [
-  { id: 'crypto', name: 'Crypto & IDs', blurb: 'Secrets, hashes, IDs and tokens', tools: cryptoTools },
-  { id: 'convert', name: 'Converters', blurb: 'Same data, another shape', tools: convert },
-  { id: 'dev', name: 'Web & dev', blurb: 'For the code you write every day', tools: dev },
-  { id: 'everyday', name: 'Everyday', blurb: 'Text, QR codes and mock-up helpers', tools: everyday },
+  { id: 'crypto', name: 'Crypto & IDs', blurb: 'Secrets, hashes, IDs and tokens', tools: [...cryptoTools, ...security] },
+  { id: 'convert', name: 'Converters', blurb: 'Same data, another shape', tools: [...convert, ...markup] },
+  { id: 'dev', name: 'Web & dev', blurb: 'For the code you write every day', tools: [...dev, ...ops] },
+  { id: 'everyday', name: 'Everyday', blurb: 'Text, QR codes and mock-up helpers', tools: [...everyday.slice(0, 1), ...scanner, ...everyday.slice(1)] },
 ];
 export const TOOLS = GROUPS.flatMap(g => g.tools);
 const byId = Object.fromEntries(TOOLS.map(t => [t.id, t]));
@@ -115,6 +119,34 @@ function shelf(title, blurb, tools, key) {
     h('div', { class: 'board' }, tools.map(toolCard)));
 }
 
+// Remember what was typed into a tool for the rest of this browser session,
+// so leaving and coming back does not lose it. Tools that handle secrets opt
+// out with keep: false.
+const inputKey = id => 'toolbox.input.' + id;
+const keptFields = body => [...body.querySelectorAll('input, textarea, select')]
+  .filter(e => !e.readOnly && e.type !== 'file');
+function keepInputs(t, body) {
+  if (t.keep === false || !keptFields(body).length) return false;
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem(inputKey(t.id))); } catch {}
+  const list = keptFields(body);
+  if (Array.isArray(saved) && saved.length === list.length) {
+    list.forEach((e, i) => {
+      const v = saved[i];
+      if (e.type === 'checkbox' ? e.checked === v : e.value === v) return;
+      if (e.type === 'checkbox') e.checked = v; else e.value = v;
+      e.dispatchEvent(new Event('input', { bubbles: true }));
+      e.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+  const save = () => {
+    try { sessionStorage.setItem(inputKey(t.id), JSON.stringify(keptFields(body).map(e => e.type === 'checkbox' ? e.checked : e.value))); } catch {}
+  };
+  body.addEventListener('input', save);
+  body.addEventListener('change', save);
+  return true;
+}
+
 let cleanup = null;
 function renderTool(t) {
   recent = [t.id, ...recent.filter(r => r !== t.id)].slice(0, 8);
@@ -141,6 +173,12 @@ function renderTool(t) {
       h('p', { class: 'lede' }, t.desc)),
     body);
   cleanup = t.render(body) || null;
+  if (keepInputs(t, body)) {
+    main.querySelector('.lede').append(' ', h('button', {
+      class: 'linkish', type: 'button', title: 'Clear what you typed and start fresh',
+      onclick: () => { try { sessionStorage.removeItem(inputKey(t.id)); } catch {} route(); },
+    }, 'Reset'));
+  }
   document.title = `${t.name} · The Toolbox`;
 }
 

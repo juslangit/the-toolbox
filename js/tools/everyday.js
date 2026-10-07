@@ -135,7 +135,7 @@ const stats = {
       top.replaceChildren(...Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([w, n]) => h('span', { class: 'pill' }, `${w} × ${n}`)));
     }
     root.append(card(field('Text', text)), card(grid4), card(h('h3', {}, 'Most used words (4+ letters)'), top));
-    on(text, run);
+    on(text, run, 'input', 120);
   },
 };
 

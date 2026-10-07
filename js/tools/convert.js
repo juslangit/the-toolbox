@@ -1,4 +1,4 @@
-import { h, field, input, textarea, select, checkbox, output, note, row, card, grid, tabs, on, copyBtn, download } from '../ui.js';
+import { h, pasteBtn, field, input, textarea, select, checkbox, output, note, row, card, grid, tabs, on, copyBtn, download } from '../ui.js';
 import yaml from '../../vendor/js-yaml.js';
 import * as toml from '../../vendor/smol-toml.js';
 import Papa from '../../vendor/papaparse.js';
@@ -38,8 +38,8 @@ const base64 = {
     });
     const textPane = card(
       grid(
-        h('div', {}, h('div', { class: 'output-head' }, h('span', { class: 'field-label' }, 'Text'), copyBtn(() => plain.value)), plain),
-        h('div', {}, h('div', { class: 'output-head' }, h('span', { class: 'field-label' }, 'Base64'), copyBtn(() => coded.value)), coded)),
+        h('div', {}, h('div', { class: 'output-head' }, h('span', { class: 'field-label' }, 'Text'), h('span', { class: 'row tight' }, pasteBtn(plain), copyBtn(() => plain.value))), plain),
+        h('div', {}, h('div', { class: 'output-head' }, h('span', { class: 'field-label' }, 'Base64'), h('span', { class: 'row tight' }, pasteBtn(coded), copyBtn(() => coded.value))), coded)),
       urlSafe, err.el,
       h('p', { class: 'field-hint' }, 'Type in either box — the other one follows.'));
 
@@ -118,7 +118,7 @@ const SAMPLE = `{
   "rooms": 3,
   "open": true,
   "prices": { "weekday": 180, "weekend": 230 },
-  "tags": ["homestay", "melaka"]
+  "tags": ["homestay", "family"]
 }`;
 
 const formats = {
@@ -147,7 +147,7 @@ const formats = {
       card(row(field('From', from), swap, field('To', to), field('Indent', indent))),
       h('div', { class: 'grid2' }, card(field('Input', src), err.el), card(out.el)),
     );
-    on([src], run);
+    on([src], run, 'input', 150);
     on([from, to, indent], run, 'change');
   },
 };

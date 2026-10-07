@@ -60,7 +60,8 @@ async function viewport(width, height, mobile = false) {
 
 // Known-answer checks, run inside the page after the tool has rendered.
 // Each returns a string describing the failure, or '' when it passes.
-const set = (sel, v, i = 0) => `(() => { const el = document.querySelectorAll('${sel}')[${i}]; el.value = ${JSON.stringify(v)}; el.dispatchEvent(new Event('input', {bubbles:true})); el.dispatchEvent(new Event('change', {bubbles:true})); })()`;
+// Sets a field and waits long enough for debounced tools to update.
+const set = (sel, v, i = 0) => `(async () => { const el = document.querySelectorAll('${sel}')[${i}]; el.value = ${JSON.stringify(v)}; el.dispatchEvent(new Event('input', {bubbles:true})); el.dispatchEvent(new Event('change', {bubbles:true})); await new Promise(r => setTimeout(r, 250)); })()`;
 const val = (sel, i = 0) => `document.querySelectorAll('${sel}')[${i}].value`;
 const CHECKS = {
   token: [`(${val('.output textarea')}.length === 32 ? '' : 'token length ' + ${val('.output textarea')}.length)`],
@@ -99,7 +100,36 @@ const CHECKS = {
   stats: [set('textarea', 'Satu dua tiga.\n\nEmpat lima.'), `(document.querySelector('.stat strong').textContent === '5' ? '' : 'words ' + document.querySelector('.stat strong').textContent)`],
   case: [`(${val('.output input', 0)} === 'kasih-alza-homestay-bilik-keluarga' && ${val('.output input', 1)} === 'kasihAlzaHomestayBilikKeluarga' ? '' : 'case: ' + ${val('.output input', 0)})`],
   placeholder: [`(document.querySelector('.preview svg') ? '' : 'no svg preview')`],
+  strength: [set('input.input', 'Password1'), `(document.querySelector('.verdict').textContent.includes('Weak') ? '' : 'Password1 not weak: ' + document.querySelector('.verdict').textContent)`,
+    set('input.input', 'tukang-kayu-lompat-pagar-77'), `(document.querySelector('.kv dd').textContent.match(/about (\\d+)/)[1] < 75 ? '' : 'passphrase over-scored: ' + document.querySelector('.kv dd').textContent)`,
+    set('input.input', 'tukang-kayu-lompat-pagar-tinggi-77'), `(document.querySelector('.verdict').textContent.includes('Strong') ? '' : '5-word passphrase not strong: ' + document.querySelector('.verdict').textContent)`,
+    set('input.input', 'Xq7#vLp2$Rm9!kTz'), `(document.querySelector('.verdict').textContent.includes('Strong') ? '' : 'random 16 not strong')`],
+  checksum: [giveFile('input[type=file]', `new File(['hello'], 'hello.txt', { type: 'text/plain' })`), 'new Promise(r => setTimeout(r, 400))',
+    `(${val('.output input', 0)} === '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824' && ${val('.output input', 3)} === '5d41402abc4b2a76b9719d911017c592' ? '' : 'file sha256: ' + ${val('.output input', 0)})`,
+    set('input.input', 'sha256: 2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824', 0), `(document.querySelector('.verdict').textContent.includes('Matches the SHA-256') ? '' : 'checksum compare: ' + document.querySelector('.verdict').textContent)`],
+  entities: [`(${val('textarea', 1)}.includes('&lt;b&gt;RM180&lt;/b&gt; &amp; &quot;sarapan&quot;') ? '' : 'encode: ' + ${val('textarea', 1)})`,
+    set('textarea', '&lt;p&gt; &copy; &#x1F44B;', 1), `(${val('textarea', 0)} === '<p> © 👋' ? '' : 'decode: ' + ${val('textarea', 0)})`],
+  markdown: ['new Promise(r => setTimeout(r, 300))', `(${val('.output textarea')}.includes('<table>') && ${val('.output textarea')}.includes('<strong>3-bedroom</strong>') ? '' : 'markdown html')`,
+    `(document.querySelector('iframe.md-frame').getAttribute('sandbox') === '' ? '' : 'preview iframe is not sandboxed')`],
+  subnet: [`(document.querySelector('.kv').textContent.includes('192.168.1.255') && document.querySelector('.kv').textContent.includes('Usable hosts254') ? '' : 'subnet /24: ' + document.querySelector('.kv').textContent.slice(0, 120))`,
+    set('input.input', '10.20.30.40 255.255.255.252'), `(document.querySelector('.kv').textContent.includes('10.20.30.40/30') && document.querySelector('.kv').textContent.includes('Usable hosts2') ? '' : 'subnet mask form')`],
+  docker: ['new Promise(r => setTimeout(r, 300))', `(() => { const y = ${val('.output textarea')}; return y.includes('container_name: n8n') && y.includes('- "5678:5678"') && y.includes('n8n_data: {}') && y.includes('restart: unless-stopped') ? '' : 'compose: ' + y; })()`,
+    `(document.querySelector('.tips').textContent.includes('-d') ? '' : 'no note about -d')`,
+    set('textarea', 'docker run -it --rm --network host -e "A=b c" --gpus all ubuntu bash -c "echo hi"'), `(() => { const y = ${val('.output textarea')}; return y.includes('network_mode: host') && y.includes('A=b c') && y.includes('tty: true') && y.includes('- bash') && y.includes('capabilities') ? '' : 'compose 2: ' + y; })()`],
+  useragent: [`document.querySelectorAll('.chip')[1].click()`, `(document.querySelector('.kv').textContent.includes('iOS 18.5') && document.querySelector('.kv').textContent.includes('Safari 18.5') ? '' : 'ua iphone: ' + document.querySelector('.kv').textContent)`,
+    `document.querySelectorAll('.chip')[3].click()`, `(document.querySelector('.kv').textContent.includes('Edge 139') && document.querySelector('.kv').textContent.includes('Windows 10 or 11') ? '' : 'ua edge: ' + document.querySelector('.kv').textContent)`,
+    `document.querySelectorAll('.chip')[4].click()`, `(document.querySelector('.kv').textContent.includes('Googlebot') ? '' : 'ua bot: ' + document.querySelector('.kv').textContent)`],
+  sql: ['new Promise(r => setTimeout(r, 1500))', `(${val('.output textarea')}.startsWith('SELECT\\n  b.id,') && ${val('.output textarea')}.includes('LEFT JOIN payments') ? '' : 'sql: ' + ${val('.output textarea')}.slice(0, 80))`],
+  http: [set('input.input', '429'), `(document.querySelectorAll('.code-row').length === 1 && document.querySelector('.code-name').textContent === 'Too Many Requests' ? '' : 'http search')`],
+  qrscan: [`document.querySelectorAll('.tabs button')[1].click()`,
+    `(async () => { const q = (await import(new URL('vendor/qrcode.js', location.href))).default; const m = q(0, 'M'); m.addData('WIFI:T:WPA;S:Rumah Kita;P:abc\\\\;123;;'); m.make(); const n = m.getModuleCount(), c = document.createElement('canvas'); c.width = c.height = (n + 8) * 8; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#000'; for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (m.isDark(r, k)) x.fillRect((k + 4) * 8, (r + 4) * 8, 8, 8); const blob = await new Promise(r => c.toBlob(r)); const dt = new DataTransfer(); dt.items.add(new File([blob], 'qr.png', { type: 'image/png' })); const inp = document.querySelector('input[type=file]'); inp.files = dt.files; inp.dispatchEvent(new Event('change')); await new Promise(r => setTimeout(r, 1500)); })()`,
+    `(document.querySelector('.scan-result').textContent.includes('Rumah Kita') && document.querySelector('.scan-result').textContent.includes('abc;123') ? '' : 'qr scan: ' + document.querySelector('.scan-result').textContent)`],
 };
+
+// Puts a File into a file input, as if the user had picked it.
+function giveFile(sel, fileExpr) {
+  return `(() => { const dt = new DataTransfer(); dt.items.add(${fileExpr}); const inp = document.querySelector('${sel}'); inp.files = dt.files; inp.dispatchEvent(new Event('change')); })()`;
+}
 
 let failedHome = false;
 try {
@@ -117,6 +147,19 @@ try {
     const sw = await evaluate(`navigator.serviceWorker.ready.then(r => !!r.active)`);
     console.log(`${sw ? '✓' : '✗'} offline service worker active`);
     if (!sw) failedHome = true;
+    // Cut the network, reload, and use a tool whose library loads on demand.
+    await sleep(1500); // let the install finish caching
+    await send('Network.enable');
+    await send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+    await send('Page.reload'); await sleep(1500);
+    const offTools = await evaluate(`document.querySelectorAll('.board .tool-card').length`);
+    await evaluate(`location.hash = '#/tool/sql'`); await sleep(1500);
+    const offSql = await evaluate(`document.querySelector('.output textarea').value.startsWith('SELECT')`);
+    const offOk = offTools === tools.length && offSql;
+    console.log(`${offOk ? '✓' : '✗'} works offline (${offTools} tools, SQL formatter ${offSql ? 'loads' : 'fails'})`);
+    if (!offOk) failedHome = true;
+    await send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+    await evaluate(`location.hash = '#/'`); await sleep(300);
   }
   let failed = 0;
   for (const id of tools) {
@@ -135,11 +178,32 @@ try {
     if (problems.length) failed++;
     await shot('tool-' + id);
   }
+  // Shell behaviour: kept inputs, secrets not kept, Paste buttons.
+  const shell = [];
+  await evaluate(`location.hash = '#/tool/case'`); await sleep(300);
+  await evaluate(set('input.input', 'Kept Between Visits'));
+  await evaluate(`location.hash = '#/'`); await sleep(200);
+  await evaluate(`location.hash = '#/tool/case'`); await sleep(300);
+  if (await evaluate(val('input.input')) !== 'Kept Between Visits') shell.push('input not kept');
+  if (await evaluate(val('.output input', 0)) !== 'kept-between-visits') shell.push('kept input not re-applied to outputs');
+  await evaluate(`[...document.querySelectorAll('.linkish')].find(b => b.textContent === 'Reset').click()`); await sleep(300);
+  if (await evaluate(val('input.input')) === 'Kept Between Visits') shell.push('Reset did not clear');
+  await evaluate(`location.hash = '#/tool/jwt'`); await sleep(300);
+  await evaluate(set('textarea', 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.x'));
+  await evaluate(`location.hash = '#/'`); await sleep(200);
+  await evaluate(`location.hash = '#/tool/jwt'`); await sleep(300);
+  if (await evaluate(val('textarea')) !== '') shell.push('JWT was kept (secrets must not be)');
+  if (!await evaluate(`!!document.querySelector('.field-head .btn.ghost')`)) shell.push('no Paste button');
+  console.log(shell.length ? `✗ shell  ${shell.join(' | ')}` : '✓ shell (kept inputs, secrets not kept, Paste)');
+  if (shell.length) failed++;
+
   // Phone views and the light theme.
   await viewport(393, 852, true);
   await evaluate(`location.hash = '#/'`); await sleep(400); await shot('home-phone');
   await evaluate(`location.hash = '#/tool/qr'`); await sleep(400); await shot('qr-phone');
   await evaluate(`location.hash = '#/tool/jwt'`); await sleep(400); await shot('jwt-phone');
+  await evaluate(`location.hash = '#/tool/docker'`); await sleep(400); await shot('docker-phone');
+  await evaluate(`location.hash = '#/tool/qrscan'`); await sleep(400); await shot('qrscan-phone');
   const overflow = await evaluate(`document.documentElement.scrollWidth > innerWidth`);
   if (overflow) { console.log('✗ phone page scrolls sideways'); failed++; }
   await viewport(1400, 900);

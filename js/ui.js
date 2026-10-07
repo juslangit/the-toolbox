@@ -49,9 +49,32 @@ export function copyBtn(getText, label = 'Copy') {
   }, label);
 }
 
+const canPaste = !!navigator.clipboard?.readText;
+
+// One-tap paste into a box — long-pressing a textarea on a phone is slow.
+export function pasteBtn(target) {
+  if (!canPaste) return null;
+  return h('button', {
+    class: 'btn small ghost', type: 'button',
+    onclick: async e => {
+      e.preventDefault();
+      try {
+        target.value = await navigator.clipboard.readText();
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+        target.focus();
+      } catch { toast('Paste was blocked — long-press the box instead'); }
+    },
+  }, 'Paste');
+}
+
+const pasteable = c => c instanceof HTMLElement && !c.readOnly &&
+  (c.tagName === 'TEXTAREA' || (c.tagName === 'INPUT' && c.type === 'text' && c.classList.contains('mono')));
+
 export function field(label, control, hint) {
   return h('label', { class: 'field' },
-    h('span', { class: 'field-label' }, label),
+    h('span', { class: 'field-head' },
+      h('span', { class: 'field-label' }, label),
+      pasteable(control) && pasteBtn(control)),
     control,
     hint && h('span', { class: 'field-hint' }, hint));
 }
@@ -145,8 +168,12 @@ export function tabs(options, value, onchange) {
   return el;
 }
 
-export function on(els, fn, ev = 'input') {
-  for (const e of [].concat(els)) e.addEventListener(ev, fn);
+// Run fn now and whenever any of els changes. A delay (ms) waits for typing to
+// pause first — for tools that are slow on big text (diff, JSON, regex).
+export function on(els, fn, ev = 'input', delay = 0) {
+  let timer;
+  const run = delay ? () => { clearTimeout(timer); timer = setTimeout(fn, delay); } : fn;
+  for (const e of [].concat(els)) e.addEventListener(ev, run);
   fn();
 }
 

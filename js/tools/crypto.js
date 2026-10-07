@@ -15,6 +15,7 @@ const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
 const hexToB64 = hex => btoa(hex.match(/../g).map(x => String.fromCharCode(parseInt(x, 16))).join(''));
 
 const token = {
+  keep: false,
   id: 'token', name: 'Token & password', group: 'crypto', icon: 'key-round',
   desc: 'Random passwords, API tokens and secrets, made on this device.',
   keywords: 'password generator random secret api key string',
@@ -66,6 +67,7 @@ const token = {
 };
 
 const hash = {
+  keep: false,
   id: 'hash', name: 'Hash text', group: 'crypto', icon: 'hash',
   desc: 'MD5, SHA-1, SHA-256, SHA-384 and SHA-512 — with an optional HMAC key.',
   keywords: 'md5 sha1 sha256 sha512 hmac checksum digest',
@@ -105,6 +107,7 @@ const hash = {
 };
 
 const bcryptTool = {
+  keep: false,
   id: 'bcrypt', name: 'Bcrypt', group: 'crypto', icon: 'lock',
   desc: 'Hash a password with bcrypt, or check a password against a hash.',
   keywords: 'password hash compare verify salt rounds',
@@ -219,6 +222,7 @@ function ago(sec) {
 }
 
 const jwt = {
+  keep: false,
   id: 'jwt', name: 'JWT decoder', group: 'crypto', icon: 'ticket',
   desc: 'Read what is inside a JSON Web Token: header, claims and expiry.',
   keywords: 'json web token decode bearer supabase auth claims exp',

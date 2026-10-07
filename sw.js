@@ -1,15 +1,9 @@
 // Offline support. Network first, so a new version shows up as soon as you are
 // online; the cache is the fallback when there is no connection.
-const CACHE = 'toolbox-v1';
-const FILES = [
-  './', 'index.html', 'style.css', 'manifest.webmanifest',
-  'js/app.js', 'js/ui.js', 'js/icons.js',
-  'js/tools/crypto.js', 'js/tools/convert.js', 'js/tools/dev.js', 'js/tools/everyday.js',
-  'vendor/bcryptjs.js', 'vendor/cronstrue.js', 'vendor/diff.js', 'vendor/js-yaml.js',
-  'vendor/md5.js', 'vendor/papaparse.js', 'vendor/qrcode.js', 'vendor/smol-toml.js',
-  'fonts/bricolage.woff2', 'fonts/jetbrains-mono.woff2',
-  'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
-];
+// tools/deploy.sh fills in the version and the full file list (tools/stamp-sw.mjs),
+// so a new tool is cached for offline use without anyone editing this file.
+const CACHE = 'toolbox-dev';
+const FILES = ['./', 'index.html']; /* @files */
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

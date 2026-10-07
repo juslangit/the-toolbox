@@ -368,3 +368,36 @@ canvas.qr { width: min(100%, 340px); height: auto; aspect-ratio: 1; border-radiu
   .hero h1 { font-size: 2rem; }
   .hero p { font-size: 1rem; }
 }
+
+/* Field label row with an optional Paste button. */
+.field-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 32px; }
+.btn.ghost { background: none; color: var(--ink-3); }
+.btn.ghost:hover { color: var(--ink); }
+.row.tight { gap: 6px; align-items: center; flex-wrap: nowrap; }
+.linkish { font: inherit; font-size: .9rem; color: var(--ink-3); background: none; border: 0; padding: 0 4px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.linkish:hover { color: var(--accent); }
+
+/* --- new tools ------------------------------------------------------------ */
+.meter.big { height: 12px; }
+.tips { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; color: var(--ink-2); }
+.tips:empty { display: none; }
+.kv.wide { grid-template-columns: minmax(130px, max-content) 1fr; }
+.output.hit .input { border-color: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent); }
+.md-frame { width: 100%; height: 460px; border: 1px solid var(--line); border-radius: 10px; background: #fffaf3; resize: vertical; }
+.codes { display: flex; flex-direction: column; }
+.code-row { display: flex; gap: 16px; align-items: baseline; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+.code-row:last-child { border-bottom: 0; }
+.code-num { font: 700 1.15rem var(--mono); min-width: 3.2ch; }
+.code-row[data-class="1"] .code-num { color: var(--ink-3); }
+.code-row[data-class="2"] .code-num { color: var(--good); }
+.code-row[data-class="3"] .code-num { color: var(--g-convert); }
+.code-row[data-class="4"] .code-num { color: var(--accent); }
+.code-row[data-class="5"] .code-num { color: var(--bad); }
+.code-name { font-weight: 650; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.scan-frame { position: relative; width: 100%; max-width: 480px; aspect-ratio: 1; margin: 0 auto; border-radius: 16px; overflow: hidden; background: var(--bg-2); border: 1px solid var(--line); }
+.scan-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.scan-box { position: absolute; inset: 18%; border: 3px solid color-mix(in srgb, var(--accent) 80%, transparent); border-radius: 18px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .25); opacity: 0; transition: opacity .2s; }
+.scan-frame.live .scan-box { opacity: 1; }
+.scan-frame:not(.live)::after { content: 'Camera is off'; position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-3); }
+.scan-result .mono-block { font-size: 1rem; }

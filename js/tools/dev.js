@@ -82,7 +82,7 @@ const regex = {
       card(h('div', { class: 'output-head' }, h('h3', {}, 'Matches'), count), view, list, replaced.el),
       h('details', { class: 'card' }, h('summary', {}, 'Cheat sheet'),
         h('dl', { class: 'kv' }, cheats.flatMap(([a, b]) => [h('dt', {}, h('code', {}, a)), h('dd', {}, b)]))));
-    on([pat, text, repl, ...flags.map(c => c.input)], run);
+    on([pat, text, repl, ...flags.map(c => c.input)], run, 'input', 120);
   },
 };
 
@@ -235,7 +235,7 @@ const diff = {
     root.append(
       h('div', { class: 'grid2' }, card(field('Before', a)), card(field('After', b))),
       card(h('div', { class: 'output-head' }, mode, stats), view));
-    on([a, b], run);
+    on([a, b], run, 'input', 150);
   },
 };
 
@@ -278,7 +278,7 @@ const json = {
       }
     }
     root.append(card(row(indent, sort, ok)), h('div', { class: 'grid2' }, card(field('Input', src), err.el), card(out.el)));
-    on([src, sort.input], run);
+    on([src, sort.input], run, 'input', 150);
   },
 };
 
