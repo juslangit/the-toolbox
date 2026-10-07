@@ -113,6 +113,11 @@ try {
   console.log(`home: ${tools.length} tools`);
   if (!tools.length) { console.log(errors.join("\n")); failedHome = true; }
   await shot('home-desktop');
+  if (BASE.startsWith('https:')) {
+    const sw = await evaluate(`navigator.serviceWorker.ready.then(r => !!r.active)`);
+    console.log(`${sw ? '✓' : '✗'} offline service worker active`);
+    if (!sw) failedHome = true;
+  }
   let failed = 0;
   for (const id of tools) {
     errors.length = 0;
