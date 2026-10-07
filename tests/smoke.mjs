@@ -20,6 +20,18 @@ const ONLY = process.argv.find(a => a.startsWith('--only='))?.slice(7).split(','
 const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, '--no-first-run',
   `--user-data-dir=${mkdtempSync(join(tmpdir(), 'toolbox-chrome-'))}`, 'about:blank'], { stdio: 'ignore' });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const tmpDir = mkdtempSync(join(tmpdir(), 'toolbox-fixtures-'));
+
+// A valid one-page PDF, written by hand so the test needs no library.
+function minimalPdf() {
+  const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] >>'];
+  let out = '%PDF-1.4\n';
+  const offs = objs.map((o, i) => { const at = out.length; out += `${i + 1} 0 obj\n${o}\nendobj\n`; return at; });
+  const xref = out.length;
+  out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('');
+  return out + `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+}
 
 let ws, nextId = 1;
 const pending = new Map();
@@ -174,6 +186,48 @@ try {
   await evaluate(`location.hash = '#/workflows/photo-web'`); await sleep(400);
   await shot('workflow-photo-web');
   if (errors.length) hand.push(...errors.map(e => 'console: ' + e.split('\n')[0]));
+
+  // Real drag-and-drop of a file from disk onto every tool's drop zone: the
+  // "Drop to open" overlay must go away, no "Open with…" sheet may appear, and
+  // the page must change (the tool took the file).
+  const fixtures = {
+    png: join(here, '..', 'icons', 'apple-touch-icon.png'),
+    pdf: join(tmpDir, 'drop.pdf'),
+    txt: join(tmpDir, 'drop.srt'),
+  };
+  writeFileSync(fixtures.pdf, minimalPdf());
+  writeFileSync(fixtures.txt, '1\n00:00:01,000 --> 00:00:02,000\nHello\n');
+  const dropFails = [];
+  let zones = 0;
+  for (const id of tools) {
+    await evaluate(`location.hash = '#/tool/${id}'`); await sleep(250);
+    const n = await evaluate(`document.querySelectorAll('.drop').length`);
+    for (let i = 0; i < n; i++) {
+      const z = await evaluate(`(() => { const d = document.querySelectorAll('.drop')[${i}]; if (!d || d.closest('[hidden]')) return null; d.scrollIntoView({ block: 'center' }); const r = d.getBoundingClientRect(); const a = (d.querySelector('input[type=file]')?.accept || ''); return { x: r.x + r.width / 2, y: r.y + r.height / 2, accept: a }; })()`);
+      if (!z) continue;
+      zones++;
+      const file = /pdf/.test(z.accept) ? fixtures.pdf : /srt|vtt/.test(z.accept) && !/video/.test(z.accept) ? fixtures.txt : fixtures.png;
+      const before = await evaluate(`document.querySelector('main').innerHTML.length`);
+      const data = { items: [], files: [file], dragOperationsMask: 1 };
+      await send('Input.dispatchDragEvent', { type: 'dragEnter', x: z.x, y: z.y, data });
+      await send('Input.dispatchDragEvent', { type: 'dragOver', x: z.x, y: z.y, data });
+      const during = await evaluate(`document.body.classList.contains('dragging')`);
+      await send('Input.dispatchDragEvent', { type: 'drop', x: z.x, y: z.y, data });
+      await sleep(600);
+      const st = await evaluate(`({ overlay: document.body.classList.contains('dragging'), sheet: !!document.querySelector('.sheet-wrap'), size: document.querySelector('main').innerHTML.length })`);
+      const p = [];
+      if (!during) p.push('overlay never showed');
+      if (st.overlay) p.push('overlay stuck');
+      if (st.sheet) p.push('Open-with sheet appeared');
+      if (st.size === before) p.push('nothing happened');
+      if (p.length) dropFails.push(`${id}#${i}: ${p.join(', ')}`);
+      await evaluate(`document.querySelector('.sheet-wrap')?.remove()`);
+      await evaluate(`location.hash = '#/'`); await sleep(100);
+      await evaluate(`location.hash = '#/tool/${id}'`); await sleep(250);
+    }
+  }
+  console.log(dropFails.length ? `✗ drag and drop  ${dropFails.join(' | ')}` : `✓ drag and drop (${zones} drop zones: overlay clears, tool takes the file)`);
+  if (dropFails.length) failed++;
   console.log(hand.length ? `✗ hand-offs  ${hand.join(' | ')}` : '✓ hand-offs (Send to, paste a file, workflows)');
   if (hand.length) failed++;
 
