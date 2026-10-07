@@ -247,12 +247,19 @@ function arrived(payload) {
   if (location.hash.startsWith('#/workflows')) return; // the workflow page has its own drop zone
   pickTool(payload, { title: receivers(payload).length ? 'Open with…' : 'Nothing opens this yet' });
 }
+// The "Drop to open" overlay is cleared in the capture phase, before any tool's
+// own drop zone sees the drop — drop zones stop the event from bubbling, so a
+// listener at the bottom of the page would never hear about it.
 let dragDepth = 0;
-addEventListener('dragenter', e => { if (e.dataTransfer?.types.includes('Files')) { dragDepth++; document.body.classList.add('dragging'); } });
-addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
+const endDrag = () => { dragDepth = 0; document.body.classList.remove('dragging'); };
+addEventListener('dragenter', e => { if (e.dataTransfer?.types.includes('Files')) { dragDepth++; document.body.classList.add('dragging'); } }, true);
+addEventListener('dragleave', e => { if (--dragDepth <= 0 || !e.relatedTarget) endDrag(); }, true);
+addEventListener('drop', endDrag, true);
+addEventListener('dragend', endDrag, true);
 addEventListener('dragover', e => { if (e.dataTransfer?.types.includes('Files')) e.preventDefault(); });
 addEventListener('drop', e => {
-  dragDepth = 0; document.body.classList.remove('dragging');
+  // A tool's own drop zone already took it (it called preventDefault).
+  if (e.defaultPrevented) return;
   const files = [...(e.dataTransfer?.files || [])];
   if (!files.length) return;
   e.preventDefault();
