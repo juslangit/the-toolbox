@@ -9,7 +9,7 @@ if [[ -f "$HOME/.claude/.env" ]]; then set -a; source "$HOME/.claude/.env"; set 
 
 STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT
-cp -R index.html style.css manifest.webmanifest sw.js js vendor fonts icons "$STAGE/"
+cp -R index.html style.css manifest.webmanifest sw.js js css vendor fonts icons "$STAGE/"
 node tools/stamp-sw.mjs "$STAGE"
 
 # The project was created on classic Pages (--force, once, on 2026-10-07), so
