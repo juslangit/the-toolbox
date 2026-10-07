@@ -8,15 +8,35 @@ import dev from './tools/dev.js';
 import ops from './tools/ops.js';
 import everyday from './tools/everyday.js';
 import scanner from './tools/scanner.js';
+import images from './tools/images.js';
+import imagefx from './tools/imagefx.js';
+import colour from './tools/colour.js';
+import pdf from './tools/pdf.js';
+import audio from './tools/audio.js';
+import video from './tools/video.js';
+import calc from './tools/calc.js';
+import type from './tools/type.js';
+import codes from './tools/codes.js';
+import devextra from './tools/devextra.js';
+import { hub, takeIncoming, pickTool, accepts, receivers } from './hub.js';
+import { renderWorkflows } from './workflows.js';
 
 export const GROUPS = [
   { id: 'crypto', name: 'Crypto & IDs', blurb: 'Secrets, hashes, IDs and tokens', tools: [...cryptoTools, ...security] },
   { id: 'convert', name: 'Converters', blurb: 'Same data, another shape', tools: [...convert, ...markup] },
-  { id: 'dev', name: 'Web & dev', blurb: 'For the code you write every day', tools: [...dev, ...ops] },
+  { id: 'dev', name: 'Web & dev', blurb: 'For the code you write every day', tools: [...dev, ...ops, ...devextra] },
+  { id: 'images', name: 'Images', blurb: 'Resize, convert, crop and clean up pictures', tools: [...images, ...imagefx] },
+  { id: 'colour', name: 'Colour', blurb: 'Pick, check and build colour schemes', tools: colour },
+  { id: 'pdf', name: 'PDF & print', blurb: 'Merge, split, number and print documents', tools: pdf },
+  { id: 'media', name: 'Audio & video', blurb: 'Trim, record, convert and subtitle', tools: [...audio, ...video] },
+  { id: 'type', name: 'Text & type', blurb: 'Words, letters, fonts and paper', tools: type },
+  { id: 'calc', name: 'Calculators', blurb: 'Sums, units, time zones and graphs', tools: calc },
+  { id: 'codes', name: 'Codes & ciphers', blurb: 'Morse, Braille, barcodes and secret messages', tools: codes },
   { id: 'everyday', name: 'Everyday', blurb: 'Text, QR codes and mock-up helpers', tools: [...everyday.slice(0, 1), ...scanner, ...everyday.slice(1)] },
 ];
 export const TOOLS = GROUPS.flatMap(g => g.tools);
 const byId = Object.fromEntries(TOOLS.map(t => [t.id, t]));
+hub.tools = TOOLS;
 
 // --- per-viewer preferences (best effort: storage can be blocked) -------
 const store = {
@@ -106,7 +126,10 @@ function renderHome() {
   main.replaceChildren(
     !q && h('div', { class: 'hero' },
       h('h1', {}, 'The Toolbox'),
-      h('p', {}, `${TOOLS.length} small tools for everyday code work. Everything runs on this device — nothing you type is sent anywhere, and it works offline.`)),
+      h('p', {}, `${TOOLS.length} small tools for code, pictures, documents and sound. Everything runs on this device — nothing you type or drop is sent anywhere, and it works offline.`),
+      h('div', { class: 'hero-actions' },
+        h('a', { class: 'btn', href: '#/workflows' }, icon('workflow', 18), ' Workflows'),
+        h('span', { class: 'field-hint' }, 'Drop or paste a file anywhere to see which tools can open it.'))),
     q && h('p', { class: 'search-sum' }, `${shelves.reduce((n, s) => n + s.querySelectorAll('.tool-card').length, 0)} tools match “${q}”`),
     ...shelves,
     !shelves.length && h('div', { class: 'empty' }, h('p', {}, `No tool for “${q}” yet.`)));
@@ -125,12 +148,12 @@ function shelf(title, blurb, tools, key) {
 const inputKey = id => 'toolbox.input.' + id;
 const keptFields = body => [...body.querySelectorAll('input, textarea, select')]
   .filter(e => !e.readOnly && e.type !== 'file');
-function keepInputs(t, body) {
+function keepInputs(t, body, restore = true) {
   if (t.keep === false || !keptFields(body).length) return false;
   let saved = null;
   try { saved = JSON.parse(sessionStorage.getItem(inputKey(t.id))); } catch {}
   const list = keptFields(body);
-  if (Array.isArray(saved) && saved.length === list.length) {
+  if (restore && Array.isArray(saved) && saved.length === list.length) {
     list.forEach((e, i) => {
       const v = saved[i];
       if (e.type === 'checkbox' ? e.checked === v : e.value === v) return;
@@ -172,8 +195,9 @@ function renderTool(t) {
         star),
       h('p', { class: 'lede' }, t.desc)),
     body);
-  cleanup = t.render(body) || null;
-  if (keepInputs(t, body)) {
+  const incoming = takeIncoming();
+  cleanup = t.render(body, incoming) || null;
+  if (keepInputs(t, body, !incoming)) {
     main.querySelector('.lede').append(' ', h('button', {
       class: 'linkish', type: 'button', title: 'Clear what you typed and start fresh',
       onclick: () => { try { sessionStorage.removeItem(inputKey(t.id)); } catch {} route(); },
@@ -184,7 +208,11 @@ function renderTool(t) {
 
 function renderNav() {
   const here = location.hash.replace('#/tool/', '');
-  nav.replaceChildren(...GROUPS.map(g =>
+  nav.replaceChildren(
+    h('div', { class: 'nav-group' },
+      h('a', { href: '#/workflows', class: location.hash.startsWith('#/workflows') ? 'on' : '', 'data-group': 'workflow' },
+        icon('workflow', 18), h('span', {}, 'Workflows'))),
+    ...GROUPS.map(g =>
     h('div', { class: 'nav-group' },
       h('span', { class: 'nav-title' }, g.name),
       g.tools.map(t => h('a', { href: `#/tool/${t.id}`, class: t.id === here ? 'on' : '', 'data-group': g.id },
@@ -196,12 +224,45 @@ function route() {
   cleanup = null;
   const m = location.hash.match(/^#\/tool\/([\w-]+)/);
   const t = m && byId[m[1]];
-  if (t) { search.value = ''; renderTool(t); } else renderHome();
+  if (t) { search.value = ''; renderTool(t); }
+  else if (location.hash.startsWith('#/workflows')) { search.value = ''; cleanup = renderWorkflows(main) || null; }
+  else renderHome();
   renderNav();
   window.scrollTo(0, 0);
 }
 addEventListener('hashchange', route);
+hub.reopen = route;
 route();
+
+// --- drop or paste a file anywhere ------------------------------------------
+// On a tool that takes it, the tool reopens with the file. Anywhere else, a
+// sheet lists the tools that can open it.
+function currentTool() {
+  const m = location.hash.match(/^#\/tool\/([\w-]+)/);
+  return m && byId[m[1]];
+}
+function arrived(payload) {
+  const t = currentTool();
+  if (t && accepts(t, payload)) { hub.incoming = payload; route(); return; }
+  if (location.hash.startsWith('#/workflows')) return; // the workflow page has its own drop zone
+  pickTool(payload, { title: receivers(payload).length ? 'Open with…' : 'Nothing opens this yet' });
+}
+let dragDepth = 0;
+addEventListener('dragenter', e => { if (e.dataTransfer?.types.includes('Files')) { dragDepth++; document.body.classList.add('dragging'); } });
+addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
+addEventListener('dragover', e => { if (e.dataTransfer?.types.includes('Files')) e.preventDefault(); });
+addEventListener('drop', e => {
+  dragDepth = 0; document.body.classList.remove('dragging');
+  const files = [...(e.dataTransfer?.files || [])];
+  if (!files.length) return;
+  e.preventDefault();
+  arrived({ files });
+});
+addEventListener('paste', e => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+  const files = [...(e.clipboardData?.files || [])];
+  if (files.length && !typing) { e.preventDefault(); arrived({ files }); }
+});
 
 document.querySelector('.brand').prepend(icon('toolbox', 26));
 document.getElementById('search-icon').replaceChildren(icon('search', 18));
